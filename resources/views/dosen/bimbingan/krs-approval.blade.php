@@ -27,9 +27,6 @@
                         <td class="py-4 px-5 text-sm text-siakad-secondary">{{ $index + 1 }}</td>
                         <td class="py-4 px-5">
                             <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-lg bg-siakad-primary flex items-center justify-center text-white text-sm font-semibold">
-                                    {{ strtoupper(substr($krs->mahasiswa->user->name ?? '-', 0, 1)) }}
-                                </div>
                                 <span class="text-sm font-medium text-siakad-dark">{{ $krs->mahasiswa->user->name ?? '-' }}</span>
                             </div>
                         </td>
@@ -62,12 +59,9 @@
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                     </button>
                                 </form>
-                                <form action="{{ url('dosen/bimbingan/krs/'.$krs->id.'/reject') }}" method="POST" class="inline">
-                                    @csrf
-                                    <button type="submit" class="p-2 text-siakad-secondary hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Reject">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                    </button>
-                                </form>
+                                <button type="button" onclick="openRejectModal('{{ url('dosen/bimbingan/krs/'.$krs->id.'/reject') }}')" class="p-2 text-siakad-secondary hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Reject">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
                                 @endif
                             </div>
                         </td>
@@ -88,4 +82,34 @@
             </table>
         </div>
     </div>
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-md shadow-xl">
+            <div class="px-6 py-4 border-b border-siakad-light">
+                <h3 class="text-lg font-semibold text-siakad-dark">Tolak KRS</h3>
+            </div>
+            <form id="rejectForm" method="POST">
+                @csrf
+                <div class="p-6">
+                    <label class="block text-sm font-medium text-siakad-dark mb-2">Alasan Penolakan</label>
+                    <textarea name="catatan" rows="4" class="input-saas w-full resize-none" placeholder="Masukkan alasan mengapa KRS ditolak... (opsional)"></textarea>
+                    <p class="text-xs text-siakad-secondary mt-2">Catatan ini akan dilihat oleh mahasiswa sebagai alasan penolakan.</p>
+                </div>
+                <div class="px-6 py-4 border-t border-siakad-light flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeRejectModal()" class="btn-ghost-saas px-4 py-2 rounded-lg text-sm">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition">Tolak KRS</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openRejectModal(url) {
+            document.getElementById('rejectForm').action = url;
+            document.getElementById('rejectModal').classList.remove('hidden');
+        }
+        function closeRejectModal() {
+            document.getElementById('rejectModal').classList.add('hidden');
+        }
+    </script>
 </x-app-layout>

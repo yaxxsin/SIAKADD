@@ -54,6 +54,11 @@ class Mahasiswa extends Model
     {
         return $query->where('status', 'aktif');
     }
+
+    public function presensi()
+    {
+        return $this->hasMany(Presensi::class);
+    }
 }
 
 

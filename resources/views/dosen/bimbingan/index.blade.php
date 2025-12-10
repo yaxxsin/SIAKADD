@@ -3,59 +3,81 @@
         Mahasiswa Bimbingan
     </x-slot>
 
-    <div class="mb-6">
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <p class="text-sm text-siakad-secondary">Daftar mahasiswa di bawah bimbingan akademik Anda</p>
+        <div class="flex items-center gap-3">
+            <!-- Search -->
+            <div class="relative">
+                <input type="text" id="searchInput" placeholder="Cari nama/NIM..." class="input-saas pl-9 pr-4 py-2 text-sm w-48">
+                <svg class="w-4 h-4 text-siakad-secondary absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            <!-- Filter Angkatan -->
+            <select id="angkatanFilter" class="input-saas text-sm py-2">
+                <option value="">Semua Angkatan</option>
+                @foreach($angkatanList as $a)
+                <option value="{{ $a }}">{{ $a }}</option>
+                @endforeach
+            </select>
+        </div>
     </div>
 
     <!-- Table Card -->
     <div class="card-saas overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full table-saas">
-                <thead>
-                    <tr class="bg-siakad-light/30">
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider w-16">#</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider">Mahasiswa</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider">NIM</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider">Angkatan</th>
-                        <th class="text-left py-3 px-5 text-xs font-semibold text-siakad-secondary uppercase tracking-wider">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($mahasiswaBimbingan as $index => $m)
-                    <tr class="border-b border-siakad-light/50">
-                        <td class="py-4 px-5 text-sm text-siakad-secondary">{{ $index + 1 }}</td>
-                        <td class="py-4 px-5">
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-lg bg-siakad-primary flex items-center justify-center text-white text-sm font-semibold">
-                                    {{ strtoupper(substr($m->user->name ?? '-', 0, 1)) }}
-                                </div>
-                                <span class="text-sm font-medium text-siakad-dark">{{ $m->user->name ?? '-' }}</span>
-                            </div>
-                        </td>
-                        <td class="py-4 px-5">
-                            <span class="text-sm font-mono text-siakad-secondary">{{ $m->nim }}</span>
-                        </td>
-                        <td class="py-4 px-5">
-                            <span class="inline-flex px-2.5 py-1 text-xs font-medium bg-siakad-secondary/10 text-siakad-secondary rounded-full">{{ $m->angkatan }}</span>
-                        </td>
-                        <td class="py-4 px-5">
-                            <span class="inline-flex px-2 py-0.5 text-[10px] font-semibold bg-emerald-100 text-emerald-700 rounded-full">Aktif</span>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="5" class="py-12 text-center">
-                            <div class="flex flex-col items-center">
-                                <div class="w-12 h-12 bg-siakad-light/50 rounded-xl flex items-center justify-center mb-3">
-                                    <svg class="w-6 h-6 text-siakad-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                                </div>
-                                <p class="text-siakad-secondary text-sm">Belum ada mahasiswa bimbingan</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+        <div id="tableContainer" class="overflow-x-auto">
+            @include('dosen.bimbingan._table')
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const angkatanFilter = document.getElementById('angkatanFilter');
+            const tableContainer = document.getElementById('tableContainer');
+            let searchTimeout;
+
+            function fetchData(page = 1) {
+                const search = searchInput.value;
+                const angkatan = angkatanFilter.value;
+                const url = `{{ route('dosen.bimbingan.index') }}?page=${page}&search=${encodeURIComponent(search)}&angkatan=${encodeURIComponent(angkatan)}`;
+
+                tableContainer.style.opacity = '0.5';
+
+                fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    tableContainer.innerHTML = html;
+                    tableContainer.style.opacity = '1';
+                    bindPaginationLinks();
+                })
+                .catch(err => {
+                    console.error(err);
+                    tableContainer.style.opacity = '1';
+                });
+            }
+
+            function bindPaginationLinks() {
+                tableContainer.querySelectorAll('.pagination a').forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const url = new URL(this.href);
+                        const page = url.searchParams.get('page') || 1;
+                        fetchData(page);
+                    });
+                });
+            }
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => fetchData(), 300);
+            });
+
+            angkatanFilter.addEventListener('change', function() {
+                fetchData();
+            });
+
+            bindPaginationLinks();
+        });
+    </script>
 </x-app-layout>

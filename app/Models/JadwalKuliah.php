@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class JadwalKuliah extends Model
 {
@@ -37,5 +38,13 @@ class JadwalKuliah extends Model
         }
 
         return !($this->jam_selesai <= $other->jam_mulai || $this->jam_mulai >= $other->jam_selesai);
+    }
+
+    /**
+     * Get all pertemuan (meetings) for this schedule
+     */
+    public function pertemuan(): HasMany
+    {
+        return $this->hasMany(Pertemuan::class);
     }
 }

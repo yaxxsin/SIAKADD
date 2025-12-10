@@ -12,7 +12,7 @@ class BimbinganController extends Controller
     /**
      * Daftar mahasiswa bimbingan
      */
-    public function index()
+    public function index(Request $request)
     {
         $dosen = Auth::user()->dosen;
         
@@ -20,11 +20,33 @@ class BimbinganController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $mahasiswaBimbingan = $dosen->mahasiswaBimbingan()
-            ->with(['user', 'prodi', 'krs' => fn($q) => $q->latest()])
-            ->get();
+        $query = $dosen->mahasiswaBimbingan()
+            ->with(['user', 'prodi', 'krs' => fn($q) => $q->latest()]);
 
-        return view('dosen.bimbingan.index', compact('mahasiswaBimbingan'));
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nim', 'like', "%{$search}%")
+                    ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        // Filter angkatan
+        if ($request->filled('angkatan')) {
+            $query->where('angkatan', $request->angkatan);
+        }
+
+        $mahasiswaBimbingan = $query->orderBy('angkatan', 'desc')->paginate(10);
+
+        // Get available angkatan for filter
+        $angkatanList = $dosen->mahasiswaBimbingan()->distinct()->pluck('angkatan')->sort()->reverse();
+
+        if ($request->ajax()) {
+            return view('dosen.bimbingan._table', compact('mahasiswaBimbingan'))->render();
+        }
+
+        return view('dosen.bimbingan.index', compact('mahasiswaBimbingan', 'angkatanList'));
     }
 
     /**

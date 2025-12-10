@@ -19,25 +19,27 @@ class PenilaianController extends Controller
     public function index()
     {
         $dosen = Auth::user()->dosen;
-        // Get classes taught by this lecturer
-        $kelasAjar = $dosen->kelas()->with(['mataKuliah', 'nilai.mahasiswa', 'krsDetail.krs.mahasiswa'])->get();
+        $kelasAjar = $dosen->kelas()->with(['mataKuliah', 'krsDetail'])->get();
         return view('dosen.penilaian.index', compact('kelasAjar'));
     }
 
-    public function store(Request $request)
+    public function show($kelasId)
+    {
+        $dosen = Auth::user()->dosen;
+        $kelas = $dosen->kelas()->with(['mataKuliah', 'krsDetail.krs.mahasiswa.user', 'nilai'])->findOrFail($kelasId);
+        
+        return view('dosen.penilaian.show', compact('kelas'));
+    }
+
+    public function store(Request $request, $kelasId)
     {
         $request->validate([
-            'mahasiswa_id' => 'required|exists:mahasiswa,id',
-            'kelas_id'     => 'required|exists:kelas,id',
-            'nilai_angka'  => 'required|numeric|min:0|max:100',
+            'nilai' => 'required|array',
+            'nilai.*' => 'nullable|numeric|min:0|max:100',
         ]);
 
         try {
-            $this->penilaianService->inputNilai(
-                $request->mahasiswa_id,
-                $request->kelas_id,
-                $request->nilai_angka
-            );
+            $this->penilaianService->bulkInputNilai($kelasId, $request->nilai);
             return redirect()->back()->with('success', 'Nilai berhasil disimpan');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());

@@ -212,9 +212,26 @@
                 transition: none !important;
             }
         </style>
+        <script>
+            function toggleDarkMode() {
+                const isDark = document.documentElement.classList.toggle('dark');
+                document.body.classList.toggle('dark', isDark);
+                localStorage.setItem('darkMode', isDark);
+                // Toggle icons
+                const moonIcon = document.getElementById('moonIcon');
+                const sunIcon = document.getElementById('sunIcon');
+                if (moonIcon && sunIcon) {
+                    moonIcon.classList.toggle('hidden', isDark);
+                    sunIcon.classList.toggle('hidden', !isDark);
+                }
+            }
+        </script>
     </head>
-    <body class="antialiased no-transition" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" :class="{ 'dark': darkMode }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val)); setTimeout(() => document.body.classList.remove('no-transition'), 100)">
-        <div class="min-h-screen flex" x-data="{ sidebarOpen: true }" :class="{ 'sidebar-collapsed': !sidebarOpen }">
+    <body class="antialiased no-transition" 
+          x-data="{ sidebarOpen: true }" 
+          :class="{ 'sidebar-collapsed': !sidebarOpen }" 
+          x-init="setTimeout(() => document.body.classList.remove('no-transition'), 100)">
+        <div class="min-h-screen flex">
             <!-- Sidebar -->
             <aside class="w-64 fixed h-full z-30 transition-all duration-300" :class="{ 'w-64': sidebarOpen, 'w-20': !sidebarOpen }" style="background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color);">
                 <!-- Logo -->
@@ -237,10 +254,6 @@
 
                 <!-- Navigation -->
                 <nav class="p-3 space-y-1 overflow-y-auto" style="max-height: calc(100vh - 180px);">
-                    <a href="{{ url('dashboard') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('dashboard') ? 'active' : '' }}" :title="!sidebarOpen ? 'Dashboard' : ''">
-                        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                        <span class="sidebar-text">Dashboard</span>
-                    </a>
 
                     @if(Auth::user()->role === 'admin')
                     <!-- Admin Panel -->
@@ -280,6 +293,10 @@
                         <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                         <span class="sidebar-text">Dosen</span>
                     </a>
+                    <a href="{{ url('admin/ruangan') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('admin/ruangan*') ? 'active' : '' }}">
+                        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        <span class="sidebar-text">Ruangan</span>
+                    </a>
 
                     <div class="pt-4 pb-1">
                         <p class="px-3 text-[10px] font-semibold text-siakad-secondary/60 uppercase tracking-widest sidebar-section-title">Akademik</p>
@@ -291,6 +308,18 @@
                         @if($pendingCount > 0)
                         <span class="ml-auto px-2 py-0.5 text-[10px] font-semibold bg-amber-100 text-amber-700 rounded-full">{{ $pendingCount }}</span>
                         @endif
+                    </a>
+                    <a href="{{ url('admin/skripsi') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('admin/skripsi*') ? 'active' : '' }}">
+                        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        <span class="sidebar-text">Skripsi / TA</span>
+                    </a>
+                    <a href="{{ url('admin/kp') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('admin/kp*') ? 'active' : '' }}">
+                        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        <span class="sidebar-text">Kerja Praktek</span>
+                    </a>
+                    <a href="{{ url('admin/kehadiran-dosen') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('admin/kehadiran-dosen*') ? 'active' : '' }}">
+                        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="sidebar-text">Kehadiran Dosen</span>
                     </a>
                     @endif
 
@@ -315,6 +344,26 @@
                         <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                         <span class="sidebar-text">Riwayat Kuliah</span>
                     </a>
+                    <a href="{{ url('mahasiswa/presensi') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('mahasiswa/presensi*') ? 'active' : '' }}">
+                        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                        <span class="sidebar-text">Presensi</span>
+                    </a>
+                    <a href="{{ url('mahasiswa/jadwal') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('mahasiswa/jadwal*') ? 'active' : '' }}">
+                        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <span class="sidebar-text">Jadwal Kuliah</span>
+                    </a>
+                    <a href="{{ url('mahasiswa/khs') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('mahasiswa/khs*') ? 'active' : '' }}">
+                        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span class="sidebar-text">KHS / Nilai</span>
+                    </a>
+                    <a href="{{ url('mahasiswa/skripsi') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('mahasiswa/skripsi*') ? 'active' : '' }}">
+                        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        <span class="sidebar-text">Skripsi / TA</span>
+                    </a>
+                    <a href="{{ url('mahasiswa/kp') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('mahasiswa/kp*') ? 'active' : '' }}">
+                        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        <span class="sidebar-text">Kerja Praktek</span>
+                    </a>
 
                     <div class="pt-4 pb-1">
                         <p class="px-3 text-[10px] font-semibold text-siakad-secondary/60 uppercase tracking-widest sidebar-section-title">Data</p>
@@ -326,6 +375,11 @@
                     @endif
 
                     @if(Auth::user()->role === 'dosen')
+                    <a href="{{ url('dosen/dashboard') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('dosen/dashboard') ? 'active' : '' }}">
+                        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        <span class="sidebar-text">Dashboard</span>
+                    </a>
+
                     <div class="pt-4 pb-1">
                         <p class="px-3 text-[10px] font-semibold text-siakad-secondary/60 uppercase tracking-widest sidebar-section-title">Bimbingan</p>
                     </div>
@@ -351,6 +405,22 @@
                     <a href="{{ url('dosen/penilaian') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('dosen/penilaian*') ? 'active' : '' }}">
                         <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         <span class="sidebar-text">Input Nilai</span>
+                    </a>
+                    <a href="{{ url('dosen/presensi') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('dosen/presensi*') ? 'active' : '' }}">
+                        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                        <span class="sidebar-text">Presensi</span>
+                    </a>
+                    <a href="{{ url('dosen/skripsi') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('dosen/skripsi*') ? 'active' : '' }}">
+                        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        <span class="sidebar-text">Bimbingan Skripsi</span>
+                    </a>
+                    <a href="{{ url('dosen/kp') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('dosen/kp*') ? 'active' : '' }}">
+                        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        <span class="sidebar-text">Bimbingan KP</span>
+                    </a>
+                    <a href="{{ url('dosen/kehadiran') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-siakad-secondary text-sm font-medium {{ request()->is('dosen/kehadiran*') ? 'active' : '' }}">
+                        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="sidebar-text">Kehadiran Saya</span>
                     </a>
                     @endif
                 </nav>
@@ -387,11 +457,65 @@
                     <div class="flex items-center gap-4">
                         @if(Auth::user()->role === 'mahasiswa')
                         <!-- Dark Mode Toggle -->
-                        <button @click="darkMode = !darkMode" class="p-2 rounded-lg transition-colors" :class="darkMode ? 'bg-siakad-primary text-white' : 'text-siakad-secondary hover:bg-siakad-light/50'" title="Toggle Dark Mode">
-                            <svg x-show="!darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                            <svg x-show="darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <button id="darkModeToggle" onclick="toggleDarkMode()" class="p-2 rounded-lg transition-colors hover:bg-siakad-light/50" style="color: var(--text-secondary);" title="Toggle Dark Mode">
+                            <svg id="moonIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                            <svg id="sunIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         </button>
+                        <script>
+                            // Sync icon state on load
+                            if (localStorage.getItem('darkMode') === 'true') {
+                                document.getElementById('moonIcon')?.classList.add('hidden');
+                                document.getElementById('sunIcon')?.classList.remove('hidden');
+                            }
+                        </script>
                         @endif
+                        
+                        <!-- Notifications Bell -->
+                        @php $unreadCount = \App\Models\Notification::where('user_id', Auth::id())->unread()->count(); @endphp
+                        <div x-data="{ notifOpen: false }" class="relative">
+                            <button @click="notifOpen = !notifOpen" class="p-2 rounded-lg transition-colors hover:bg-siakad-light/50 relative" style="color: var(--text-secondary);" title="Notifikasi">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                                @if($unreadCount > 0)
+                                <span class="absolute -top-1 -right-1 w-5 h-5 text-[10px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
+                                @endif
+                            </button>
+                            
+                            <!-- Notification Dropdown -->
+                            <div x-show="notifOpen" @click.away="notifOpen = false" x-transition class="absolute right-0 mt-2 w-80 rounded-xl shadow-xl z-50 overflow-hidden animate-fade-in" style="background-color: var(--bg-card); border: 1px solid var(--border-color);">
+                                <div class="px-4 py-3 flex items-center justify-between" style="border-bottom: 1px solid var(--border-color);">
+                                    <h3 class="font-semibold" style="color: var(--text-primary);">Notifikasi</h3>
+                                    @if($unreadCount > 0)
+                                    <form action="{{ route('notifications.mark-all-read') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="text-xs text-indigo-600 hover:underline">Tandai semua dibaca</button>
+                                    </form>
+                                    @endif
+                                </div>
+                                <div class="max-h-80 overflow-y-auto">
+                                    @php $notifications = \App\Models\Notification::where('user_id', Auth::id())->orderBy('created_at', 'desc')->limit(10)->get(); @endphp
+                                    @forelse($notifications as $notif)
+                                    <a href="{{ route('notifications.index') }}" class="block px-4 py-3 hover:bg-siakad-light/30 transition {{ !$notif->is_read ? 'bg-indigo-50/50' : '' }}" style="border-bottom: 1px solid var(--border-color);">
+                                        <div class="flex gap-3">
+                                            <span class="text-lg">{{ $notif->icon }}</span>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-medium truncate {{ !$notif->is_read ? 'text-indigo-700' : '' }}" style="color: {{ $notif->is_read ? 'var(--text-primary)' : '' }};">{{ $notif->title }}</p>
+                                                <p class="text-xs mt-0.5 truncate" style="color: var(--text-secondary);">{{ Str::limit($notif->message, 50) }}</p>
+                                                <p class="text-[10px] mt-1" style="color: var(--text-secondary);">{{ $notif->created_at->diffForHumans() }}</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                    @empty
+                                    <div class="px-4 py-8 text-center">
+                                        <p class="text-sm" style="color: var(--text-secondary);">Tidak ada notifikasi</p>
+                                    </div>
+                                    @endforelse
+                                </div>
+                                @if($notifications->isNotEmpty())
+                                <a href="{{ route('notifications.index') }}" class="block px-4 py-3 text-center text-sm text-indigo-600 hover:bg-siakad-light/30 transition">Lihat Semua</a>
+                                @endif
+                            </div>
+                        </div>
+                        
                         <div class="text-right">
                             <p class="text-sm font-medium" style="color: var(--text-primary);">{{ Auth::user()->name }}</p>
                             <p class="text-[11px]" style="color: var(--text-secondary);">{{ now()->format('l, d M Y') }}</p>

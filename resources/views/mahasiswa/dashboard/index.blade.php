@@ -84,7 +84,7 @@
             </a>
 
             <!-- Perkuliahan -->
-            <a href="#" class="card-saas p-5 hover:border-siakad-primary/30 group">
+            <a href="{{ route('mahasiswa.jadwal.index') }}" class="card-saas p-5 hover:border-siakad-primary/30 group">
                 <div class="w-11 h-11 bg-siakad-secondary/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-siakad-secondary/20 transition">
                     <svg class="w-5 h-5 text-siakad-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
@@ -102,7 +102,7 @@
             </a>
 
             <!-- Biodata -->
-            <a href="#" class="card-saas p-5 hover:border-siakad-primary/30 group">
+            <a href="{{ route('mahasiswa.biodata.index') }}" class="card-saas p-5 hover:border-siakad-primary/30 group">
                 <div class="w-11 h-11 bg-siakad-dark/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-siakad-dark/20 transition">
                     <svg class="w-5 h-5 text-siakad-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                 </div>
@@ -156,7 +156,7 @@
         const siakadLight = '#E3E3E3';
 
         // SKS Chart
-        const sksData = @json($sksHistory);
+        const sksData = @json($sksHistory).reverse();
         const sksCtx = document.getElementById('sksChart').getContext('2d');
         new Chart(sksCtx, {
             type: 'bar',
@@ -181,7 +181,7 @@
         });
 
         // IPS Chart
-        const ipsData = @json($ipsHistory);
+        const ipsData = @json($ipsHistory).reverse();
         const ipsCtx = document.getElementById('ipsChart').getContext('2d');
         new Chart(ipsCtx, {
             type: 'line',
