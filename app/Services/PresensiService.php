@@ -155,4 +155,75 @@ class PresensiService
               ->whereHas('krsDetail', fn($q2) => $q2->where('kelas_id', $kelasId));
         })->with('user')->get();
     }
+
+    /**
+     * Get attendance summary for multiple classes (Batch Optimization)
+     * Reduces N+1 query problem when generating advisor context
+     * 
+     * @param int $mahasiswaId
+     * @param array $kelasIds
+     * @return array<int, array> Keyed by kelasId
+     */
+    public function getBatchRekapPresensi(int $mahasiswaId, array $kelasIds): array
+    {
+        $result = [];
+        
+        // 1. Get all relevant meetings for these classes
+        $meetingsByKelas = [];
+        $allPertemuanIds = [];
+        
+        $meetings = Pertemuan::with('jadwalKuliah')
+            ->whereHas('jadwalKuliah', fn($q) => $q->whereIn('kelas_id', $kelasIds))
+            ->where('status', Pertemuan::STATUS_TERLAKSANA)
+            ->get();
+            
+        foreach ($meetings as $meeting) {
+            $kelasId = $meeting->jadwalKuliah->kelas_id;
+            $meetingsByKelas[$kelasId][] = $meeting->id;
+            $allPertemuanIds[] = $meeting->id;
+        }
+
+        // 2. Get all presensi record for this student for these meetings
+        $presensiRecords = Presensi::where('mahasiswa_id', $mahasiswaId)
+            ->whereIn('pertemuan_id', $allPertemuanIds)
+            ->get()
+            ->keyBy('pertemuan_id');
+
+        // 3. Calculate stats per kelas
+        foreach ($kelasIds as $kelasId) {
+            $classMeetingIds = $meetingsByKelas[$kelasId] ?? [];
+            $totalPertemuan = count($classMeetingIds);
+            
+            $stats = [
+                'hadir' => 0,
+                'sakit' => 0,
+                'izin' => 0,
+                'alpa' => 0,
+            ];
+
+            foreach ($classMeetingIds as $pId) {
+                if (isset($presensiRecords[$pId])) {
+                    $status = $presensiRecords[$pId]->status;
+                    if (isset($stats[$status])) {
+                        $stats[$status]++;
+                    }
+                }
+            }
+
+            $persentase = $totalPertemuan > 0 
+                ? round(($stats['hadir'] / $totalPertemuan) * 100, 1) 
+                : 0;
+
+            $result[$kelasId] = [
+                'total_pertemuan' => $totalPertemuan,
+                'hadir' => $stats['hadir'],
+                'sakit' => $stats['sakit'],
+                'izin' => $stats['izin'],
+                'alpa' => $stats['alpa'],
+                'persentase' => $persentase,
+            ];
+        }
+
+        return $result;
+    }
 }

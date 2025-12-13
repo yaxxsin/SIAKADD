@@ -60,6 +60,12 @@ class AdvisorContextBuilder
             'metadata' => [
                 'generated_at' => now()->toIso8601String(),
                 'prodi_key' => $prodiKey,
+                'retrieval_stats' => [
+                    'courses_count' => count($courseStatuses),
+                    'attendance_checked' => $attendance['data_available'],
+                    'has_prodi_rules' => $prodiKey !== 'default',
+                ],
+                'context_quality_score' => $this->calculateContextQuality($attendance['data_available'], $prodiKey !== 'default'),
             ],
         ];
     }
@@ -261,6 +267,9 @@ class AdvisorContextBuilder
     /**
      * Get attendance data with availability flag
      */
+    /**
+     * Get attendance data with availability flag (Optimized Batch Retrieval)
+     */
     protected function getAttendanceData(Mahasiswa $mahasiswa): array
     {
         $kelasList = \App\Models\Kelas::whereHas('krsDetail.krs', function ($q) use ($mahasiswa) {
@@ -269,12 +278,33 @@ class AdvisorContextBuilder
               ->whereHas('tahunAkademik', fn($ta) => $ta->where('is_active', true));
         })->with('mataKuliah')->get();
 
+        if ($kelasList->isEmpty()) {
+            return [
+                'data_available' => false,
+                'all_zero_or_null' => true,
+                'warning' => 'Tidak ada kelas aktif diambil.',
+                'details' => [],
+            ];
+        }
+
+        // Batch retrieval to avoid N+1 problem (Thesis Optimization Point)
+        $kelasIds = $kelasList->pluck('id')->toArray();
+        $batchRekap = $this->presensiService->getBatchRekapPresensi($mahasiswa->id, $kelasIds);
+
         $details = [];
         $hasValidData = false;
         $allZeroOrNull = true;
 
         foreach ($kelasList as $kelas) {
-            $rekap = $this->presensiService->getRekapPresensi($mahasiswa->id, $kelas->id);
+            // Use batched data or fallback to zero
+            $rekap = $batchRekap[$kelas->id] ?? [
+                'total_pertemuan' => 0,
+                'hadir' => 0,
+                'sakit' => 0,
+                'izin' => 0,
+                'alpa' => 0,
+                'persentase' => 0,
+            ];
 
             // Check if there's actual meeting data
             $hasPertemuan = $rekap['total_pertemuan'] > 0;
