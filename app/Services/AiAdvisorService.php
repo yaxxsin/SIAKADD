@@ -13,7 +13,7 @@ class AiAdvisorService
     protected AdvisorContextBuilder $contextBuilder;
     protected AdvisorGuards $guards;
     protected string $apiKey;
-    protected string $model = 'gemini-2.5-flash-lite';
+    protected string $model = 'gemini-2.5-flash';
 
     protected const MAX_RETRIES = 1;
 
@@ -180,9 +180,19 @@ class AiAdvisorService
             }
 
             $error = $response->json();
+            $errorMessage = $error['error']['message']
+                ?? $error['message']
+                ?? 'HTTP ' . $response->status();
+
+            // Log for debugging
+            \Log::warning('Gemini API Error', [
+                'status' => $response->status(),
+                'error' => $error,
+            ]);
+
             return [
                 'success' => false,
-                'message' => 'Gagal mendapatkan respons dari AI: ' . ($error['error']['message'] ?? 'Unknown error'),
+                'message' => 'Gagal mendapatkan respons dari AI: ' . $errorMessage,
             ];
         } catch (\Exception $e) {
             return [

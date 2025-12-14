@@ -29,8 +29,8 @@ Route::get('/', function () {
 // Redirect generic dashboard to role-specific dashboard
 Route::get('/dashboard', function () {
     $user = auth()->user();
-    
-    return match($user->role) {
+
+    return match ($user->role) {
         'admin' => redirect()->route('admin.dashboard'),
         'dosen' => redirect()->route('dosen.dashboard'),
         'mahasiswa' => redirect()->route('mahasiswa.dashboard'),
@@ -137,10 +137,10 @@ Route::middleware(['auth', 'role:mahasiswa'])->prefix('mahasiswa')->name('mahasi
     Route::delete('/krs/{detailId}', [KrsController::class, 'destroy'])->middleware('throttle:krs')->name('krs.destroy');
     Route::post('/krs/submit', [KrsController::class, 'submit'])->middleware('throttle:krs')->name('krs.submit');
     Route::post('/krs/revise', [KrsController::class, 'revise'])->middleware('throttle:krs')->name('krs.revise');
-    
+
     // Transkrip
     Route::get('/transkrip', [TranskripController::class, 'index'])->name('transkrip.index');
-    
+
     // Biodata
     Route::get('/biodata', [\App\Http\Controllers\Mahasiswa\BiodataController::class, 'index'])->name('biodata.index');
     Route::put('/biodata', [\App\Http\Controllers\Mahasiswa\BiodataController::class, 'update'])->name('biodata.update');
@@ -192,6 +192,10 @@ Route::middleware(['auth', 'role:dosen'])->prefix('dosen')->name('dosen.')->grou
     Route::post('/bimbingan/krs/{krs}/approve', [\App\Http\Controllers\Dosen\BimbinganController::class, 'approveKrs'])->name('bimbingan.krs-approve');
     Route::post('/bimbingan/krs/{krs}/reject', [\App\Http\Controllers\Dosen\BimbinganController::class, 'rejectKrs'])->name('bimbingan.krs-reject');
 
+    // Risk Dashboard (PA)
+    Route::get('/risk-dashboard', [\App\Http\Controllers\Dosen\RiskDashboardController::class, 'index'])->name('risk-dashboard.index');
+    Route::get('/risk-dashboard/{mahasiswa}', [\App\Http\Controllers\Dosen\RiskDashboardController::class, 'show'])->name('risk-dashboard.show');
+
     // Presensi
     Route::get('/presensi', [\App\Http\Controllers\Dosen\PresensiController::class, 'index'])->name('presensi.index');
     Route::get('/presensi/kelas/{kelas}', [\App\Http\Controllers\Dosen\PresensiController::class, 'showKelas'])->name('presensi.kelas');
@@ -222,4 +226,4 @@ Route::middleware(['auth', 'role:dosen'])->prefix('dosen')->name('dosen.')->grou
     Route::post('/penilaian/{kelas}', [\App\Http\Controllers\Dosen\PenilaianController::class, 'store'])->middleware('throttle:penilaian')->name('penilaian.store');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

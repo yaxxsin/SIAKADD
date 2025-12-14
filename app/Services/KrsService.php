@@ -7,16 +7,24 @@ use App\Models\Krs;
 use App\Models\KrsDetail;
 use App\Models\Mahasiswa;
 use App\Models\TahunAkademik;
+use App\Domain\Enrollment\EnrollmentPolicy;
 use Illuminate\Support\Facades\DB;
-use Exception;
 
 class KrsService
 {
-    public function getActiveKrsOrNew(Mahasiswa $mahasiswa)
+    public function __construct(
+        protected EnrollmentPolicy $policy
+    ) {
+    }
+
+    /**
+     * Get or create active KRS for student
+     */
+    public function getActiveKrsOrNew(Mahasiswa $mahasiswa): Krs
     {
         $tahunAktif = TahunAkademik::where('is_active', true)->first();
         if (!$tahunAktif) {
-            throw new Exception('Tidak ada tahun akademik yang aktif.');
+            throw new \Exception('Tidak ada tahun akademik yang aktif.');
         }
 
         return Krs::firstOrCreate(
@@ -28,45 +36,17 @@ class KrsService
         );
     }
 
-    public function addKelas(Krs $krs, $kelasId)
+    /**
+     * Add a class to KRS with full validation
+     */
+    public function addKelas(Mahasiswa $mahasiswa, Krs $krs, int $kelasId): KrsDetail
     {
-        return DB::transaction(function () use ($krs, $kelasId) {
-            if ($krs->status !== 'draft') {
-                throw new Exception('KRS sudah disubmit/final. Tidak bisa ubah.');
-            }
-
+        return DB::transaction(function () use ($mahasiswa, $krs, $kelasId) {
             $kelas = Kelas::with('mataKuliah')->findOrFail($kelasId);
-            
-            // 1. Cek Kapasitas
-            $terisi = KrsDetail::where('kelas_id', $kelasId)->count();
-            if ($terisi >= $kelas->kapasitas) {
-                throw new Exception("Kelas penuh! Kapasitas: {$kelas->kapasitas}");
-            }
 
-            // 2. Cek apakah mata kuliah sudah diambil di KRS ini (beda kelas)
-            $mkTaken = $krs->krsDetail()->whereHas('kelas', function($q) use ($kelas) {
-                $q->where('mata_kuliah_id', $kelas->mata_kuliah_id);
-            })->exists();
+            // Run all validations through EnrollmentPolicy
+            $this->policy->validateEnrollment($mahasiswa, $krs, $kelas);
 
-            if ($mkTaken) {
-                throw new Exception("Mata kuliah {$kelas->mataKuliah->nama_mk} sudah diambil.");
-            }
-
-            // 3. Cek Batas SKS
-            $sksSaatIni = $krs->krsDetail->sum(fn($detail) => $detail->kelas->mataKuliah->sks);
-            $sksBaru = $kelas->mataKuliah->sks;
-            
-            // Hitung jatah SKS (Logic IPS Semester Lalu)
-            // Untuk sederhananya kita ambil default atau logic real
-            // Disini kita ambil max sks dari config 'default' dulu jika IPS tidak ada
-            // TODO: Implement calculation based on IPS logic
-            $maxSks = config('siakad.maks_sks.default', 24); 
-
-            if (($sksSaatIni + $sksBaru) > $maxSks) {
-                throw new Exception("Melebihi batas SKS ({$maxSks}). Total SKS akan menjadi: " . ($sksSaatIni + $sksBaru));
-            }
-
-            // Add
             return KrsDetail::create([
                 'krs_id' => $krs->id,
                 'kelas_id' => $kelasId
@@ -74,31 +54,77 @@ class KrsService
         });
     }
 
-    public function removeKelas(Krs $krs, $detailId)
+    /**
+     * Remove a class from KRS
+     */
+    public function removeKelas(Krs $krs, int $detailId): void
     {
-        if ($krs->status !== 'draft') {
-            throw new Exception('KRS terkunci.');
-        }
+        $this->policy->assertKrsEditable($krs);
 
         $detail = $krs->krsDetail()->findOrFail($detailId);
         $detail->delete();
     }
 
-    public function submitKrs(Krs $krs)
+    /**
+     * Submit KRS for approval
+     */
+    public function submitKrs(Krs $krs): void
     {
-        if ($krs->krsDetail()->count() === 0) {
-            throw new Exception("KRS kosong tidak dapat diajukan.");
-        }
+        $this->policy->validateSubmission($krs);
         $krs->update(['status' => 'pending']);
     }
 
-    public function approveKrs(Krs $krs)
+    /**
+     * Approve KRS (for dosen/admin)
+     */
+    public function approveKrs(Krs $krs, ?string $catatan = null): void
     {
-        $krs->update(['status' => 'approved']);
+        $krs->update([
+            'status' => 'approved',
+            'catatan' => $catatan,
+        ]);
     }
 
-    public function rejectKrs(Krs $krs)
+    /**
+     * Reject KRS (for dosen/admin)
+     */
+    public function rejectKrs(Krs $krs, ?string $catatan = null): void
     {
-        $krs->update(['status' => 'rejected']);
+        $krs->update([
+            'status' => 'rejected',
+            'catatan' => $catatan,
+        ]);
+    }
+
+    /**
+     * Reset rejected KRS to draft
+     */
+    public function resetToDraft(Krs $krs): void
+    {
+        if ($krs->status !== 'rejected') {
+            throw new \Exception('Hanya KRS yang ditolak yang dapat direset.');
+        }
+
+        $krs->update([
+            'status' => 'draft',
+            'catatan' => null,
+        ]);
+    }
+
+    /**
+     * Get enrollment status summary
+     */
+    public function getEnrollmentStatus(Mahasiswa $mahasiswa, Krs $krs): array
+    {
+        return $this->policy->getEnrollmentStatus($mahasiswa, $krs);
+    }
+
+    /**
+     * Get policy instance (for direct access if needed)
+     */
+    public function getPolicy(): EnrollmentPolicy
+    {
+        return $this->policy;
     }
 }
+
